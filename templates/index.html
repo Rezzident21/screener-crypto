@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Binance Order Book Scanner</title>
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.css">
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+    <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+    <script>
+        function updateData() {
+            $.ajax({
+                url: "/data",
+                type: "GET",
+                dataType: "json",
+                success: function(data) {
+                    updateTable(data);
+                },
+                error: function(error) {
+                    console.error("Error fetching data: ", error);
+                }
+            });
+        }
+
+        function updateTable(data) {
+            var table = $('#orderBookTable').DataTable();
+            table.clear();
+
+            $.each(data, function(symbol, details) {
+                table.row.add([
+                    symbol,
+                    details['market_type'],
+                    details['action'],
+                    details['price'],
+                    details['quantity'],
+                    details['total_value'],
+                    details['decay_time'],
+                    details['percentage_to_density'].toFixed(2) + '%',
+                    details['elapsed_time'],
+                    details['15min_volume_trade']
+                ]).draw();
+
+                // Змінити колір для 'Buy' і 'Sell'
+                var row = table.row(table.rows().length - 1).nodes().to$();
+                row.removeClass('buy sell');
+                row.addClass(details['action'].toLowerCase());
+
+                // Додати класи фільтрації
+                row.addClass(details['market_type'].toLowerCase());
+            });
+        }
+
+        $(document).ready(function() {
+            var table = $('#orderBookTable').DataTable({
+                "paging": false,
+                "info": false
+            });
+
+            $('.filter-checkbox').on('change', function() {
+                var filterType = $(this).data('type');
+                if ($(this).prop('checked')) {
+                    $('#orderBookTable tbody tr.' + filterType).show();
+                } else {
+                    $('#orderBookTable tbody tr.' + filterType).hide();
+                }
+                table.draw();
+            });
+
+            $('#orderBookTable thead th').each(function() {
+                $(this).on('click', function() {
+                    var columnIndex = $(this).index();
+                    table.order([columnIndex, 'asc']).draw();
+                });
+            });
+        });
+
+        setInterval(updateData, 1);
+    </script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+             background-color: #383e47;
+
+        }
+
+        h1 {
+            text-align: center;
+            color: white;
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        th, td {
+            border: 1px solid #dddddd;
+            text-align: left;
+            padding: 8px;
+        }
+
+        th {
+            background-color: #f2f2f2;
+            cursor: pointer;
+        }
+
+        .long {
+            background-color: #8cff8c;
+        }
+
+        .short {
+            background-color: #ff8c8c;
+        }
+
+        .filter-checkbox {
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Binance Order Book Scanner</h1>
+    <table border="1" id="orderBookTable">
+        <thead>
+            <tr>
+                <th>Symbol</th>
+                <th>Market Type</th>
+                <th>Action</th>
+                <th>Price</th>
+                <th>Quantity</th>
+                <th>$</th>
+                <th>Decay Time</th>
+                <th>Percentage to Density</th>
+                <th>Time in Book</th>
+                                <th>Volume last 15m</th>
+
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Table data will be dynamically updated here -->
+        </tbody>
+    </table>
+</body>
+</html>
