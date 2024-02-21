@@ -1,7 +1,4 @@
-Звісно, ось приклад README.md файлу, який можна додати у вашому репозиторії на GitHub:
 
-markdown
-Copy code
 # Binance Order Book Scanner
 
 This is a simple web application for scanning Binance order book data and displaying it in a table format. It allows users to customize settings, add, delete, and update coin information, including the percentage to the limit and threshold.
